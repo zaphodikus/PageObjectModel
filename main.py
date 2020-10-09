@@ -6,9 +6,10 @@ from PageFactory import WebApplicationStub, PageFactory, PageTitleChecker
 from TestBase import POMException
 
 # PageOjects that return fresh Pageobjects
-from PageChains import DemoLoginPageUsernameV2, DemoLoginPagePasswordV2
+from PageChains import DemoLoginPageUsernameV2
 
 WEB_LOGIN_URL = "http://localhost:8080/loginuser.html"
+
 
 class DemoLoginPageUsername(PageFactory):
 
@@ -63,9 +64,6 @@ class DemoProfilePage(PageFactory):
 
     def logout(self):
         self.btnLogout.click()
-        # wait for the promo page scripts to stop
-        import time
-        time.sleep(2)
 
 
 class CombineLoginOutSteps(WebApplicationStub):
@@ -167,12 +165,15 @@ class TestPageObjects(PageBaseTest):
         """
         todo:
         """
-        login_page = DemoLoginPageUsernameV2({"driver":self,
-                                              "url": WEB_LOGIN_URL,
-                                              "username": "user",
-                                              "password": "pass"}
+        login_page = DemoLoginPageUsernameV2(driver=self,
+                                             url=WEB_LOGIN_URL,
+                                             username="user",
+                                             password="pass"
                                             )
         password_page = login_page.next()
         home_page = password_page.next()
-        if home_page != None:
-            raise UserWarning("unexpected at this time")
+        profile_page = home_page.next()
+        ending_page = profile_page.next()
+        if not isinstance(ending_page, DemoLoginPageUsernameV2):
+            raise UserWarning("Expected login page at this time!")
+
