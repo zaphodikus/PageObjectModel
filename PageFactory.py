@@ -1,11 +1,13 @@
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import *
+
+# PageObject base classes
 from TestBase import Logger, DEFAULT_TIMEOUT, POMException
-import time
 
 ANIMATION_DELAY = 1  # make this 0 when you want to run fast as possible
 
