@@ -3,6 +3,7 @@
 # This Code : https://github.com/zaphodikus/PageObjectModel
 #
 from selenium.webdriver.common.by import By
+import time
 
 # PageObject base classes
 from TestBase import PageBaseTest
@@ -196,7 +197,8 @@ class TestPageObjects(PageBaseTest):
         """
         print("Repeat, but this time go directly to profile page")
         login_page = DemoLoginPageUsernameV2(driver=self,
-                                             url=WEB_LOGIN_URL
+                                             url=WEB_LOGIN_URL,
+                                             animation_delay=0.5
                                             )
         profile_page = login_page.login_to_profile(username="user",
                                                    password="pass")

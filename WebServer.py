@@ -1,3 +1,7 @@
+# for the purposess of this example, I've added a very minimal and noise web-server using python
+# ['python', '-m', 'http.server', '8080']
+# you won't need this file at all except to run the self-tests here.
+#
 import subprocess
 import threading
 import io

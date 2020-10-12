@@ -1,3 +1,5 @@
+# unit testing fixtures, replace these with your test framework's own classes and fixtures
+
 import unittest
 import datetime
 from selenium import webdriver

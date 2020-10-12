@@ -8,6 +8,7 @@
 
 from selenium.webdriver.common.by import By
 from PageFactory import PageFactory
+import inspect
 
 MAP = {}  # Page objects can add themselves to this map to use the @next_page decorator
 # This allows us to reference classes before their definitions are known
@@ -24,14 +25,16 @@ def next_page(next_):
         return wrapper
     return deco
 
-
 class ChainingPageFactory(PageFactory):
     def __init__(self, **kwargs):
-        # the starting page in a chain of pages may have a URL
-        if 'url' in kwargs.keys():
-            super().__init__(kwargs['driver'], kwargs['url'])
-        else:
-            super().__init__(kwargs['driver'])
+        # renames one of the parameters before calling the base class
+        args = {"base": kwargs['driver']}
+        for k in inspect.getfullargspec(super().__init__)[0]:
+            if k in kwargs.keys():
+                args[k] = kwargs[k]
+
+        # the starting page in a chain of pages may have a url
+        super().__init__(**args)
         # remove url, subsequent pages don't use the starting url
         self._kwargs = kwargs
         self._kwargs.pop('url', None)
@@ -61,15 +64,16 @@ class DemoLoginPageUsernameV2(ChainingPageFactory):
         """
         Does the whole shebang in one go - show how to make sure we always return the object the decorator
         says we should do.
-        All the other parameters get passed at construction time via self._kwargs:
-        :param password: password
+        :param username: The user name
+        :param password: The password
         :return: the profile page
         """
-        password_page = self.next(username)
-        # after password we expect to get to the main app page
-        home_page = password_page.next(password)
-        # this will always let us get the Profile page Object
-        return home_page.next()
+        return self.next(username).next(password).next()
+
+        # It's possibly easier to understand that code in the long-hand
+        #    password_page = self.next(username)
+        #    home_page = password_page.next(password)
+        #    return home_page.next()
 
 
 register_page(DemoLoginPageUsernameV2)
