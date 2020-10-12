@@ -1,3 +1,7 @@
+# A python unittest app showing browser Page Object Model to simplify app testing.
+# Details : https://softcircuitry.blogspot.com/2020/10/selenium-page-objects-1-of-2.html
+# This Code : https://github.com/zaphodikus/PageObjectModel
+#
 from selenium.webdriver.common.by import By
 
 # PageObject base classes
@@ -161,19 +165,43 @@ class TestPageObjects(PageBaseTest):
             print(f"Caught a Page-object-model exception:\n   {ex}")
             print("Which is expected, OK")
 
-    def test_page_chaining(self):
+    def _test_page_chaining(self):
         """
-        todo:
+        A slightly more refined approach which adds a contract to each page that specifies the page must always
+        return a very specific page to you. Depending on your application this approach that uses a decorator
+        to cast in stone which Page you end up on will simplify apps so changes in flow can still occur
+        under-the-hood.
         """
+        print("Chain all the app pages for login logout together one at a time")
         login_page = DemoLoginPageUsernameV2(driver=self,
                                              url=WEB_LOGIN_URL,
                                              username="user",
                                              password="pass"
                                             )
+        # after entering a username, we always get to the password page
         password_page = login_page.next()
+        # after password we expect to get to the main app page
         home_page = password_page.next()
+        # this will always let us open the profile page
         profile_page = home_page.next()
+        # a logout will always take us back to the login page
         ending_page = profile_page.next()
+
         if not isinstance(ending_page, DemoLoginPageUsernameV2):
             raise UserWarning("Expected login page at this time!")
 
+    def test_page_chain_to_profile(self):
+        """
+        Use a PageObject method that ends up taking us via other pages to the page we want in one go
+        """
+        print("Repeat, but this time go directly to profile page")
+        login_page = DemoLoginPageUsernameV2(driver=self,
+                                             url=WEB_LOGIN_URL
+                                            )
+        profile_page = login_page.login_to_profile(username="user",
+                                                   password="pass")
+        # a logout will always take us back to the login page
+        ending_page = profile_page.next()
+
+        if not isinstance(ending_page, DemoLoginPageUsernameV2):
+            raise UserWarning("Expected login page at this time!")
