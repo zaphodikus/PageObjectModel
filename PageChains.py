@@ -10,16 +10,15 @@ from selenium.webdriver.common.by import By
 from PageFactory import PageFactory
 
 MAP = {}  # Page objects can add themselves to this map to use the @next_page decorator
-def register_page(key, page_class):
-    MAP[key] = page_class
+# This allows us to reference classes before their definitions are known
+def register_page(page_class):
+    MAP[page_class.__name__] = page_class
 
 
 # You can decorate the page next() method if the page is added to the MAP
 def next_page(next_):
     def deco(func):
         def wrapper(self, *args, **kwargs):
-            for k, v in kwargs.items():  # add any params passed, to the variables shared between pages
-                self._kwargs[k] = v
             func(self, *args, **kwargs)
             return MAP[next_](**self._kwargs)
         return wrapper
@@ -49,8 +48,8 @@ class DemoLoginPageUsernameV2(ChainingPageFactory):
     }
 
     @next_page("DemoLoginPagePasswordV2")
-    def next(self):
-        self._submit(self._kwargs['username'])
+    def next(self, username):
+        self._submit(username)
         return self
 
     def _submit(self, username):
@@ -66,15 +65,14 @@ class DemoLoginPageUsernameV2(ChainingPageFactory):
         :param password: password
         :return: the profile page
         """
-        del username, password  # decorator copies them for us. Not a pattern I'm particularly happy with.
-        password_page = self.next()
+        password_page = self.next(username)
         # after password we expect to get to the main app page
-        home_page = password_page.next()
+        home_page = password_page.next(password)
         # this will always let us get the Profile page Object
         return home_page.next()
 
 
-register_page("DemoLoginPageUsernameV2", DemoLoginPageUsernameV2)
+register_page(DemoLoginPageUsernameV2)
 
 
 class DemoLoginPagePasswordV2(ChainingPageFactory):
@@ -85,8 +83,8 @@ class DemoLoginPagePasswordV2(ChainingPageFactory):
     }
 
     @next_page("DemoHomePageV2")
-    def next(self):
-        self._submit(self._kwargs['password'])
+    def next(self, password):
+        self._submit(password)
         return self
 
     def _submit(self, password):
@@ -94,7 +92,7 @@ class DemoLoginPagePasswordV2(ChainingPageFactory):
         self.btnLogin.click()
 
 
-register_page("DemoLoginPagePasswordV2", DemoLoginPagePasswordV2)
+register_page(DemoLoginPagePasswordV2)
 
 
 class DemoHomePageV2(ChainingPageFactory):
@@ -115,7 +113,7 @@ class DemoHomePageV2(ChainingPageFactory):
         self.btnProfile.click()
 
 
-register_page("DemoHomePageV2", DemoHomePageV2)
+register_page(DemoHomePageV2)
 
 
 class DemoProfilePageV2(ChainingPageFactory):
@@ -127,10 +125,10 @@ class DemoProfilePageV2(ChainingPageFactory):
     @next_page("DemoLoginPageUsernameV2")
     def next(self):
         self._logout()
-        return DemoLoginPageUsernameV2(**self._kwargs)
+        return self
 
     def _logout(self):
         self.btnLogout.click()
 
 
-register_page("DemoProfilePageV2", DemoProfilePageV2)
+register_page(DemoProfilePageV2)
