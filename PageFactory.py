@@ -112,8 +112,11 @@ class PageFactory(Logger):
         :param alias: the key in the lookup dictionary
         :return: webelement
         """
+        if alias == "locators":
+            raise Exception("A PageFactory class locators dict was not defined!")
         if alias != "__len__":
             self.log(f"__getattr__ {alias}")
+
         if alias in self.locators.keys():
             locator = self.locators[alias]
             # wait for element to be present

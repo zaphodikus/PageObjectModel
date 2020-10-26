@@ -25,6 +25,7 @@ def next_page(next_):
         return wrapper
     return deco
 
+
 class ChainingPageFactory(PageFactory):
     def __init__(self, **kwargs):
         # renames one of the parameters before calling the base class

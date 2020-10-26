@@ -1,5 +1,5 @@
-# for the purposess of this example, I've added a very minimal and noise web-server using python
-# ['python', '-m', 'http.server', '8080']
+# for the purposess of this example, I've added a very minimal and noise
+# web-server using python   ['python', '-m', 'http.server', '8080']
 # you won't need this file at all except to run the self-tests here.
 #
 import subprocess
@@ -53,11 +53,9 @@ class WebServer(object):
 
     def exec_command(self, command, cwd=None):
         if cwd is not None:
-            print
-            '[' + ' '.join(command) + '] in ' + cwd
+            print('[' + ' '.join(command) + '] in ' + cwd)
         else:
-            print
-            '[' + ' '.join(command) + ']'
+            print('[' + ' '.join(command) + ']')
 
         self.p = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd

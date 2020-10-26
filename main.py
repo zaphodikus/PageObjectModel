@@ -3,6 +3,7 @@
 # This Code : https://github.com/zaphodikus/PageObjectModel
 #
 from selenium.webdriver.common.by import By
+from selenium import __version__ as selenium_version
 import time
 
 # PageObject base classes
@@ -16,19 +17,59 @@ from PageChains import DemoLoginPageUsernameV2
 WEB_LOGIN_URL = "http://localhost:8080/loginuser.html"
 
 
+class WelcomePage(PageFactory):
+    """
+    First time login after new account created gets you a Account-filling-out screen
+    """
+    def __init__(self, driver, url=None):
+        super().__init__(driver, url)
+
+    locators = {
+        "heading": (By.XPATH, "//h1[contains(text(),'Welcome to Demo')]"),
+        "firstname": (By.ID, "first-name"),
+        "lastname": (By.ID, "last-name"),
+        "btnContinue": (By.XPATH, "//button[contains(text(),'Continue')]")
+    }
+
+    def submit(self, firstname, lastname):
+        self.firstname = firstname
+        self.lastname = lastname
+        self.btnContinue.click()
+
+
 class DemoLoginPageUsername(PageFactory):
 
     def __init__(self, driver, url=None):
         super().__init__(driver, url)
 
-    # define locators dictionary where key name will became WebElement using PageFactory
+    # define locators dictionary where key name will became WebElement using
+    # PageFactory
     locators = {
         "editUserName": (By.ID, "usernameOrEmail"),
         "btnContinue": (By.NAME, "Continue")
     }
 
     def submit(self, username):
-        self.editUserName = username               # edtUserName become class variable using PageFactory
+        # edtUserName become class variable from PageFactory
+        self.editUserName = username
+        self.btnContinue.click()
+
+
+class DemoLoginPageUsername(PageFactory):
+
+    def __init__(self, driver, url=None):
+        super().__init__(driver, url)
+
+    # define locators dictionary where key name will became WebElement using
+    # PageFactory
+    locators = {
+        "editUserName": (By.ID, "usernameOrEmail"),
+        "btnContinue": (By.NAME, "Continue")
+    }
+
+    def submit(self, username):
+        # edtUserName become class variable from PageFactory
+        self.editUserName = username
         self.btnContinue.click()
 
 
@@ -37,7 +78,8 @@ class DemoLoginPagePassword(PageFactory):
     def __init__(self, driver):
         super().__init__(driver)
 
-    # define locators dictionary where key name will became WebElement using PageFactory
+    # define locators dictionary where key name will became WebElement
+    # from PageFactory
     locators = {
         "editPassword": (By.ID, "password"),
         "btnLogin": (By.NAME, "LogIn"),
@@ -108,12 +150,29 @@ class TestPageObjects(PageBaseTest):
         pglogin = DemoLoginPageUsername(self, "http://localhost:8080/loginuser.html")
         pglogin.submit("user")
 
+    def test_welcome(self):
+        print(f"Selenium python module v: {selenium_version}")
+
+        self.get("http://localhost:8080/welcome.html")
+        pg_welcome = WelcomePage(self)
+        pg_welcome.submit("firstname", "lastname")
+
     def _test_login_logout(self):
         """
         EXAMPLE 1: Of simple page object use
         """
         self.get("http://localhost:8080/loginuser.html")
         pglogin = DemoLoginPageUsername(self)
+        from selenium.webdriver.support.wait import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+        server = 'TM80'
+        row = WebDriverWait(pglogin.driver, timeout=5).until(
+            EC.visibility_of_element_located((By.XPATH,
+                f"//p[@class='name' and contains(text(),'{server}')]/../../.."))
+        )
+        pglogin.highlight_web_element(row)
+        elem = row.find_element(By.XPATH, "//i[@class='material-icons connect-icon']")
+        pglogin.highlight_web_element(elem)
         pglogin.submit("user")
         pgsubmit = DemoLoginPagePassword(self)
         pgsubmit.submit("pass")
@@ -132,8 +191,9 @@ class TestPageObjects(PageBaseTest):
 
     def _test_combine_pages_mixing(self):
         """
-        EXAMPLE 3: Using the composition class and mixing that with direct use of the webdriver.
-        And then for fun, use discrete page-objects all off the same webdriver connection
+        EXAMPLE 3: Using the composition class and mixing that with direct
+        use of the webdriver. And then for fun, use discrete page-objects
+        all from the same webdriver connection
         """
         login = CombineLoginOutSteps(self)
         browser_app = login.get_app()
@@ -153,9 +213,10 @@ class TestPageObjects(PageBaseTest):
 
     def _test_page_titles(self):
         """
-        PageTitleChecker helper class to allow checking the web page title contains a specified substring.
-        TitleChecker is most useful to assert that we have navigated to a specific page, but don't care about
-        content or errors.
+        PageTitleChecker helper class to allow checking the web page title
+        contains a specified substring.
+        TitleChecker is most useful to assert that we have navigated to a
+        specific page, but don't care about content or errors.
         """
         PageTitleChecker(self, "Goog", "http://www.google.com")
 
@@ -168,10 +229,11 @@ class TestPageObjects(PageBaseTest):
 
     def _test_page_chaining(self):
         """
-        A slightly more refined approach which adds a contract to each page that specifies the page must always
-        return a very specific page to you. Depending on your application this approach that uses a decorator
-        to cast in stone which Page you end up on will simplify apps so changes in flow can still occur
-        under-the-hood.
+        A slightly more refined approach which adds a contract to each page
+        that specifies the page must always return a very specific page to
+        callers. Depending on your application this approach that uses a
+        decorator to cast in stone which Page you end up on will simplify
+        apps so changes in flow can still occur under-the-hood.
         """
         print("Chain all the app pages for login logout together one at a time")
         login_page = DemoLoginPageUsernameV2(driver=self,
@@ -191,9 +253,10 @@ class TestPageObjects(PageBaseTest):
         if not isinstance(ending_page, DemoLoginPageUsernameV2):
             raise UserWarning("Expected login page at this time!")
 
-    def test_page_chain_to_profile(self):
+    def _test_page_chain_to_profile(self):
         """
-        Use a PageObject method that ends up taking us via other pages to the page we want in one go
+        Use a PageObject method that ends up taking us via other pages to
+        the page we want, in one call
         """
         print("Repeat, but this time go directly to profile page")
         login_page = DemoLoginPageUsernameV2(driver=self,
